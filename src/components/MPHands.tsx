@@ -122,6 +122,9 @@ const MPHands = () => {
       // gestureOutput.style.display = "block";
       const categoryName = results.gestures[0][0].categoryName;
       console.log(`Predicition: ${categoryName}`);
+      const categoryScore = (results.gestures[0][0].score * 100).toFixed(2);
+      const gestureOutput = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %`;
+      console.log(`${gestureOutput}`);
 
       // const categoryScore = parseFloat(
       //   results.gestures[0][0].score * 100
