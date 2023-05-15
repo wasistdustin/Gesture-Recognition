@@ -121,7 +121,7 @@ const MPHands = () => {
     if (results.gestures.length > 0) {
       // gestureOutput.style.display = "block";
       const categoryName = results.gestures[0][0].categoryName;
-      console.log(`Predicition ${categoryName}`);
+      console.log(`Predicition: ${categoryName}`);
 
       // const categoryScore = parseFloat(
       //   results.gestures[0][0].score * 100
