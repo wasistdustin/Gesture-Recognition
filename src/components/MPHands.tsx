@@ -9,6 +9,7 @@ import * as cam from "@mediapipe/camera_utils"; //notwendig?
 import { drawConnectors } from "@mediapipe/drawing_utils";
 import { drawLandmarks } from "@mediapipe/drawing_utils";
 import { useEffect, useRef, useState } from "react";
+import Message from "./Message";
 import {
   GestureRecognizer,
   FilesetResolver,
@@ -24,6 +25,8 @@ const MPHands = () => {
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gestureOutputText, setGestureOutputText] = useState("");
+  const [gestureScore, setGestureScore] = useState("");
+  const [gestureName, setGestureName] = useState("");
 
   const createGestureRecognizer = async () => {
     const vision = await FilesetResolver.forVisionTasks(
@@ -123,9 +126,13 @@ const MPHands = () => {
 
       const gestureOutput = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %`;
       console.log(`${gestureOutput}`);
+      setGestureScore(categoryScore);
       setGestureOutputText(gestureOutput);
+      setGestureName(categoryName);
     } else {
       setGestureOutputText("None");
+      setGestureScore("NoScore");
+      setGestureName("None");
       // gestureOutput.style.display = "none";
     }
   };
@@ -133,7 +140,11 @@ const MPHands = () => {
   return (
     <>
       <div>
-        <p>{gestureOutputText}</p>
+        <Message
+          text={gestureOutputText}
+          score={gestureScore}
+          gesture={gestureName}
+        ></Message>
       </div>
       <div>
         <Webcam
