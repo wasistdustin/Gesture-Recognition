@@ -8,7 +8,7 @@ import { Camera } from "@mediapipe/camera_utils";
 import * as cam from "@mediapipe/camera_utils"; //notwendig?
 import { drawConnectors } from "@mediapipe/drawing_utils";
 import { drawLandmarks } from "@mediapipe/drawing_utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   GestureRecognizer,
   FilesetResolver,
@@ -23,6 +23,8 @@ let canvasCtx: any;
 const MPHands = () => {
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [gestureOutputText, setGestureOutputText] = useState("");
+
   const createGestureRecognizer = async () => {
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
@@ -121,46 +123,51 @@ const MPHands = () => {
 
       const gestureOutput = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %`;
       console.log(`${gestureOutput}`);
-      //setGestureOutputText(gestureOutput);
+      setGestureOutputText(gestureOutput);
     } else {
-      //setGestureOutputText("None");
+      setGestureOutputText("None");
       // gestureOutput.style.display = "none";
     }
   };
 
   return (
-    <div>
-      <Webcam
-        audio={false}
-        mirrored={true}
-        ref={webcamRef}
-        style={{
-          position: "absolute",
-          marginLeft: "auto",
-          marginRight: "auto",
-          left: "0",
-          right: "0",
-          textAlign: "center",
-          zIndex: 9,
-          width: 360,
-          height: 640,
-        }}
-      ></Webcam>
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          marginLeft: "auto",
-          marginRight: "auto",
-          left: "0",
-          right: "0",
-          textAlign: "center",
-          zIndex: 9,
-          width: 360,
-          height: 640,
-        }}
-      ></canvas>
-    </div>
+    <>
+      <div>
+        <p>{gestureOutputText}</p>
+      </div>
+      <div>
+        <Webcam
+          audio={false}
+          mirrored={true}
+          ref={webcamRef}
+          style={{
+            position: "absolute",
+            marginLeft: "auto",
+            marginRight: "auto",
+            left: "0",
+            right: "0",
+            textAlign: "center",
+            zIndex: 9,
+            width: 360,
+            height: 640,
+          }}
+        ></Webcam>
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute",
+            marginLeft: "auto",
+            marginRight: "auto",
+            left: "0",
+            right: "0",
+            textAlign: "center",
+            zIndex: 9,
+            width: 360,
+            height: 640,
+          }}
+        ></canvas>
+      </div>
+    </>
   );
 };
 
