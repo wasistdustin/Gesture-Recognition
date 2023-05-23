@@ -1,20 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { Hands } from "@mediapipe/hands";
-import * as hands from "@mediapipe/hands"; //notwendig??
-import { HAND_CONNECTIONS } from "@mediapipe/hands";
+import { Hands, HAND_CONNECTIONS } from "@mediapipe/hands";
 import { Results } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
-import * as cam from "@mediapipe/camera_utils"; //notwendig?
-import { drawConnectors } from "@mediapipe/drawing_utils";
-import { drawLandmarks } from "@mediapipe/drawing_utils";
-import { useEffect, useRef, useState } from "react";
+import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
+import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
 import Message from "./Message";
-import {
-  GestureRecognizer,
-  FilesetResolver,
-  DrawingUtils,
-} from "@mediapipe/tasks-vision";
 
 let gestureRecognizer: any;
 let enableWebcamButton;
@@ -27,7 +18,7 @@ const MPHands = () => {
   const [gestureOutputText, setGestureOutputText] = useState("");
   const [gestureScore, setGestureScore] = useState("");
   const [gestureName, setGestureName] = useState("");
-
+  //init ML algo for seven gestures
   const createGestureRecognizer = async () => {
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
@@ -43,6 +34,7 @@ const MPHands = () => {
   createGestureRecognizer();
 
   useEffect(() => {
+    //init MP hand modell
     const hands = new Hands({
       locateFile: (file) => {
         console.log(`${file}`);
@@ -56,7 +48,7 @@ const MPHands = () => {
       minTrackingConfidence: 0.5,
     });
     hands.onResults(onResults);
-
+    //get frame for hand detection
     if (
       typeof webcamRef.current !== "undefined" &&
       webcamRef.current !== null &&
@@ -75,7 +67,7 @@ const MPHands = () => {
       camera.start();
     }
   }, []);
-
+  //draw landmarks + gesture detection
   const onResults = (results: Results) => {
     const video = webcamRef.current?.video;
     const canvasElement = canvasRef.current;
@@ -102,6 +94,7 @@ const MPHands = () => {
       canvasElement.width,
       canvasElement.height
     );
+    //draw landmarks
     if (results.multiHandLandmarks) {
       console.log("Found Hand");
       for (const landmarks of results.multiHandLandmarks) {
@@ -116,15 +109,14 @@ const MPHands = () => {
     let nowInMs = Date.now();
     const resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
     console.log("Prediction durhc");
-
+    //detect gestures one of seven
     if (resultsRec.gestures.length > 0) {
-      // gestureOutput.style.display = "block";
       const categoryName = resultsRec.gestures[0][0].categoryName;
       console.log(`Predicition ${categoryName}`);
 
       const categoryScore = (resultsRec.gestures[0][0].score * 100).toFixed(2);
 
-      const gestureOutput = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %`;
+      const gestureOutput = `Gesture: ${categoryName}\n Confidence: ${categoryScore} %`;
       console.log(`${gestureOutput}`);
       setGestureScore(categoryScore);
       setGestureOutputText(gestureOutput);
@@ -133,13 +125,13 @@ const MPHands = () => {
       setGestureOutputText("None");
       setGestureScore("NoScore");
       setGestureName("None");
-      // gestureOutput.style.display = "none";
     }
   };
 
   return (
     <>
       <div>
+        {/* draw Result of gesture detection */}
         <Message
           text={gestureOutputText}
           score={gestureScore}

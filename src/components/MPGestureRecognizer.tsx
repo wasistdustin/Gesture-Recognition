@@ -18,21 +18,24 @@ import {
 let gestureRecognizer: any;
 
 const MPGestureRecognizer = () => {
-  useEffect(() => {
-    const createGestureRecognizer = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
-      );
-      gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+  //init ML algo for seven gestures
+  const createGestureRecognizer = async () => {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
+    );
+    const gestureRecognizer = await GestureRecognizer.createFromOptions(
+      vision,
+      {
         baseOptions: {
           modelAssetPath:
             "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
         },
         runningMode: "VIDEO",
-      });
-    };
-    createGestureRecognizer();
-  });
+      }
+    );
+  };
+  //createGestureRecognizer();
+
   return gestureRecognizer;
 };
 

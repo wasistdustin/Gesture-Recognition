@@ -7,44 +7,39 @@ interface Props {
 }
 
 // classifiers are: ["None", "Closed_Fist", "Open_Palm", "Pointing_Up","Thumb_Down", "Thumb_Up", "Victory", "ILoveYou"]
-let color = "";
-let font = "";
 
 const Message = ({ text, score, gesture }: Props) => {
   function decideGesture() {
     switch (gesture) {
       case "None":
-        return (color = "blue");
+        return "blue";
       case "Closed_Fist":
-        return (color = "green");
+        return "green";
       case "Open_Palm":
-        return (color = "pink");
+        return "pink";
       case "Pointing_Up":
-        return (color = "yellow");
+        return "yellow";
       case "Thumb_Down":
-        return (color = "grey");
+        return "grey";
       case "Thumb_Up":
-        return (color = "purple");
+        return "purple";
       case "Victory":
-        return (color = "red");
+        return "red";
       case "ILoveYou":
-        return (color = "orange");
+        return "orange";
       default:
-        return (color = "black");
+        return "black";
     }
   }
 
   function evaluateConfidence() {
     var scoreNumber: number = +score;
-    if (scoreNumber > 80) {
-      font = "1000";
-    } else {
-      font = "normal";
-    }
+    return scoreNumber > 75 ? "1000" : "normal";
   }
-  decideGesture();
-  evaluateConfidence();
-  return <div style={{ color: color, fontWeight: font }}>{text}</div>;
+
+  const color = decideGesture();
+  const fontWeight = evaluateConfidence();
+  return <div style={{ color, fontWeight }}>{text}</div>;
 };
 
 export default Message;
