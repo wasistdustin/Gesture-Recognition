@@ -6,6 +6,7 @@ import { Camera } from "@mediapipe/camera_utils";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
 import Message from "./Message";
+import Canvas from "./Canvas";
 
 let gestureRecognizer: any;
 let enableWebcamButton;
@@ -15,6 +16,9 @@ let canvasCtx: any;
 const MPHands = () => {
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [results, setResults] = useState<Results | null>(null);
+
   const [gestureOutputText, setGestureOutputText] = useState("");
   const [gestureScore, setGestureScore] = useState("");
   const [gestureName, setGestureName] = useState("");
@@ -70,46 +74,20 @@ const MPHands = () => {
   //draw landmarks + gesture detection
   const onResults = (results: Results) => {
     const video = webcamRef.current?.video;
-    const canvasElement = canvasRef.current;
-    if (!canvasElement) return;
-    const canvasCtx = canvasElement.getContext("2d");
-    if (!canvasCtx) return;
 
-    const videoWidth = video?.videoWidth;
-    const videoHeight = video?.videoHeight;
-    if (!videoWidth || !videoHeight) return;
-
-    // Set canvas width
-    canvasElement.width = videoWidth;
-    canvasElement.height = videoHeight;
-
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, videoWidth, videoHeight);
-    canvasCtx.translate(videoWidth, 0);
-    canvasCtx.scale(-1, 1);
-    canvasCtx.drawImage(
-      results.image,
-      0,
-      0,
-      canvasElement.width,
-      canvasElement.height
-    );
     //draw landmarks
     if (results.multiHandLandmarks) {
       console.log("Found Hand");
-      for (const landmarks of results.multiHandLandmarks) {
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 5,
-        });
-        drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
-      }
+
+      setResults(results);
+    } else {
+      setResults(null);
     }
-    canvasCtx.restore();
+    //Detect Gesture
     let nowInMs = Date.now();
     const resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
     console.log("Prediction durhc");
-    //detect gestures one of seven
+    //get one gestures out of seven
     if (resultsRec.gestures.length > 0) {
       const categoryName = resultsRec.gestures[0][0].categoryName;
       console.log(`Predicition ${categoryName}`);
@@ -155,20 +133,13 @@ const MPHands = () => {
             height: 640,
           }}
         ></Webcam>
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            marginLeft: "auto",
-            marginRight: "auto",
-            left: "0",
-            right: "0",
-            textAlign: "center",
-            zIndex: 9,
-            width: 360,
-            height: 640,
-          }}
-        ></canvas>
+        {results && (
+          <Canvas
+            results={results}
+            webcamRef={webcamRef}
+            canvasRef={canvasRef}
+          />
+        )}
       </div>
     </>
   );
