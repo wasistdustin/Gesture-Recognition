@@ -12,9 +12,9 @@ interface Props {
 }
 
 const Canvas = ({ results, webcamRef, canvasRef }: Props) => {
-  console.log(results);
-  console.log(webcamRef);
-  console.log(canvasRef);
+  // console.log(results);
+  // console.log(webcamRef);
+  // console.log(canvasRef);
 
   useEffect(() => {
     if (!webcamRef || !canvasRef) return;

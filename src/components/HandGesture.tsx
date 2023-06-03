@@ -13,7 +13,11 @@ let enableWebcamButton;
 let webcamRunning = true;
 let canvasCtx: any;
 
-const MPHands = () => {
+interface Props {
+  onGesture: (gesture: string, confidence: string) => void;
+}
+
+const HandGesture = ({ onGesture }: Props) => {
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -41,7 +45,7 @@ const MPHands = () => {
     //init MP hand modell
     const hands = new Hands({
       locateFile: (file) => {
-        console.log(`${file}`);
+        //console.log(`${file}`);
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
       },
     });
@@ -77,7 +81,7 @@ const MPHands = () => {
 
     //draw landmarks
     if (results.multiHandLandmarks) {
-      console.log("Found Hand");
+      //console.log("Found Hand");
 
       setResults(results);
     } else {
@@ -86,23 +90,25 @@ const MPHands = () => {
     //Detect Gesture
     let nowInMs = Date.now();
     const resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
-    console.log("Prediction durhc");
+    //console.log("Prediction durhc");
     //get one gestures out of seven
     if (resultsRec.gestures.length > 0) {
       const categoryName = resultsRec.gestures[0][0].categoryName;
-      console.log(`Predicition ${categoryName}`);
+      //console.log(`Predicition ${categoryName}`);
 
       const categoryScore = (resultsRec.gestures[0][0].score * 100).toFixed(2);
 
       const gestureOutput = `Gesture: ${categoryName}\n Confidence: ${categoryScore} %`;
-      console.log(`${gestureOutput}`);
+      //console.log(`${gestureOutput}`);
       setGestureScore(categoryScore);
       setGestureOutputText(gestureOutput);
       setGestureName(categoryName);
+      onGesture(categoryName, categoryScore);
     } else {
       setGestureOutputText("None");
       setGestureScore("NoScore");
       setGestureName("None");
+      onGesture("None", "None");
     }
   };
 
@@ -122,6 +128,7 @@ const MPHands = () => {
           mirrored={true}
           ref={webcamRef}
           style={{
+            //display: "none",
             position: "absolute",
             marginLeft: "auto",
             marginRight: "auto",
@@ -145,4 +152,4 @@ const MPHands = () => {
   );
 };
 
-export default MPHands;
+export default HandGesture;
