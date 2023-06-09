@@ -37,6 +37,7 @@ const HandGesture = ({ onGesture }: Props) => {
           "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
       },
       runningMode: "VIDEO",
+      numHands: 2,
     });
   };
   createGestureRecognizer();
@@ -78,10 +79,13 @@ const HandGesture = ({ onGesture }: Props) => {
   //draw landmarks + gesture detection
   const onResults = (results: Results) => {
     const video = webcamRef.current?.video;
+    //console.log(results);
 
     //draw landmarks
     if (results.multiHandLandmarks) {
       //console.log("Found Hand");
+      //console.log(results.multiHandLandmarks[0]);
+      console.log(results);
 
       setResults(results);
     } else {
@@ -90,12 +94,20 @@ const HandGesture = ({ onGesture }: Props) => {
     //Detect Gesture
     let nowInMs = Date.now();
     const resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
+    //console.log(resultsRec);
+    // if (results.multiHandLandmarks[1]) {
+    //   let nowInMs = Date.now();
+    //   const resultsRec1 = gestureRecognizer.recognizeForVideo(video, nowInMs);
+    //console.log(resultsRec);
+
+    // }
     //console.log("Prediction durhc");
     //get one gestures out of seven
     if (resultsRec.gestures.length > 0) {
       const categoryName = resultsRec.gestures[0][0].categoryName;
       //console.log(`Predicition ${categoryName}`);
-
+      console.log(`GestRec:`, resultsRec.handednesses[0][0].categoryName);
+      //const handSide = resultsRec.handedne
       const categoryScore = (resultsRec.gestures[0][0].score * 100).toFixed(2);
 
       const gestureOutput = `Gesture: ${categoryName}\n Confidence: ${categoryScore} %`;

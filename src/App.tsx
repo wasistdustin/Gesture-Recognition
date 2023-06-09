@@ -7,7 +7,7 @@ import HandGesture from "./components/HandGesture";
 function App() {
   const [count, setCount] = useState(0);
   const handleGesture = (gestureName: string, gestureConfidence: string) => {
-    console.log(`Die Geste ${gestureName} ist zu ${gestureConfidence} sicher`);
+    //console.log(`Die Geste ${gestureName} ist zu ${gestureConfidence} sicher`);
   };
 
   return (

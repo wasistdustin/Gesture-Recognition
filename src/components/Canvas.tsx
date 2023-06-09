@@ -43,10 +43,10 @@ const Canvas = ({ results, webcamRef, canvasRef }: Props) => {
       canvasElement.width,
       canvasElement.height
     );
-    console.log(results);
+    //console.log(results);
 
     if (results.multiHandLandmarks) {
-      console.log("Found Hand");
+      //console.log("Found Hand");
       for (const landmarks of results.multiHandLandmarks) {
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
           color: "#00FF00",
