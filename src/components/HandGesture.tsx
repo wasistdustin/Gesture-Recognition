@@ -18,9 +18,9 @@ interface Props {
     gestureFirst: string,
     confidenceFirst: number,
     sideFirst: string,
-    gestureSecond?: string,
-    confidenceSecond?: number,
-    sideSecond?: string
+    gestureSecond: string,
+    confidenceSecond: number,
+    sideSecond: string
   ) => void;
 }
 
@@ -114,7 +114,13 @@ const HandGesture = ({ onGesture }: Props) => {
       const categoryName = resultsRec.gestures[0][0].categoryName;
       //console.log(`Predicition ${categoryName}`);
       //console.log(`GestRec:`, resultsRec.handednesses[0][0].categoryName);
-      const side = resultsRec.handednesses[0][0].categoryName;
+      //const side = resultsRec.handednesses[0][0].categoryName;
+      let side = "";
+      if (resultsRec.handednesses[0][0].categoryName === "Left") {
+        side = "Right";
+      } else if (resultsRec.handednesses[0][0].categoryName === "Right") {
+        side = "Left";
+      }
       //const handSide = resultsRec.handedne
       const categoryScore = resultsRec.gestures[0][0].score * 100;
       console.log(resultsRec);
@@ -132,7 +138,7 @@ const HandGesture = ({ onGesture }: Props) => {
           resultsRec.handednesses[0][0].categoryName
         );
       } else {
-        onGesture(categoryName, categoryScore, side, "", 0, "");
+        onGesture(categoryName, categoryScore, side, "None", 0, "None");
       }
 
       //setGestureScore(categoryScore);
