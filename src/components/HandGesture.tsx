@@ -14,7 +14,14 @@ let webcamRunning = true;
 let canvasCtx: any;
 
 interface Props {
-  onGesture: (gesture: string, confidence: string) => void;
+  onGesture: (
+    gestureFirst: string,
+    confidenceFirst: number,
+    sideFirst: string,
+    gestureSecond?: string,
+    confidenceSecond?: number,
+    sideSecond?: string
+  ) => void;
 }
 
 const HandGesture = ({ onGesture }: Props) => {
@@ -85,7 +92,7 @@ const HandGesture = ({ onGesture }: Props) => {
     if (results.multiHandLandmarks) {
       //console.log("Found Hand");
       //console.log(results.multiHandLandmarks[0]);
-      console.log(results);
+      //console.log(results);
 
       setResults(results);
     } else {
@@ -106,21 +113,36 @@ const HandGesture = ({ onGesture }: Props) => {
     if (resultsRec.gestures.length > 0) {
       const categoryName = resultsRec.gestures[0][0].categoryName;
       //console.log(`Predicition ${categoryName}`);
-      console.log(`GestRec:`, resultsRec.handednesses[0][0].categoryName);
+      //console.log(`GestRec:`, resultsRec.handednesses[0][0].categoryName);
+      const side = resultsRec.handednesses[0][0].categoryName;
       //const handSide = resultsRec.handedne
-      const categoryScore = (resultsRec.gestures[0][0].score * 100).toFixed(2);
+      const categoryScore = resultsRec.gestures[0][0].score * 100;
+      console.log(resultsRec);
 
       const gestureOutput = `Gesture: ${categoryName}\n Confidence: ${categoryScore} %`;
       //console.log(`${gestureOutput}`);
-      setGestureScore(categoryScore);
+      if (resultsRec.gestures.length > 1) {
+        //change Sides because of mirrroed Webcam
+        onGesture(
+          resultsRec.gestures[0][0].categoryName,
+          resultsRec.gestures[0][0].score * 100,
+          resultsRec.handednesses[1][0].categoryName,
+          resultsRec.gestures[1][0].categoryName,
+          resultsRec.gestures[1][0].score * 100,
+          resultsRec.handednesses[0][0].categoryName
+        );
+      } else {
+        onGesture(categoryName, categoryScore, side, "", 0, "");
+      }
+
+      //setGestureScore(categoryScore);
       setGestureOutputText(gestureOutput);
       setGestureName(categoryName);
-      onGesture(categoryName, categoryScore);
     } else {
       setGestureOutputText("None");
       setGestureScore("NoScore");
       setGestureName("None");
-      onGesture("None", "None");
+      onGesture("None", 0, "None", "None", 0, "None");
     }
   };
 
@@ -128,11 +150,11 @@ const HandGesture = ({ onGesture }: Props) => {
     <>
       <div>
         {/* draw Result of gesture detection */}
-        <Message
+        {/* <Message
           text={gestureOutputText}
           score={gestureScore}
           gesture={gestureName}
-        ></Message>
+        ></Message> */}
       </div>
       <div>
         <Webcam

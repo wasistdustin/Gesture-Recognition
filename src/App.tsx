@@ -6,8 +6,20 @@ import HandGesture from "./components/HandGesture";
 
 function App() {
   const [count, setCount] = useState(0);
-  const handleGesture = (gestureName: string, gestureConfidence: string) => {
-    //console.log(`Die Geste ${gestureName} ist zu ${gestureConfidence} sicher`);
+  const handleGesture = (
+    gestureFirst: string,
+    confidenceFirst: number,
+    sideFirst: string,
+    gestureSecond?: string,
+    confidenceSecond?: number,
+    sideSecond?: string
+  ) => {
+    console.log(
+      `Die 1. Geste ${gestureFirst} Confi ${confidenceFirst} Hand: ${sideFirst}`
+    );
+    console.log(
+      `Die 2. Geste ${gestureSecond} Confi ${confidenceSecond} Hand: ${sideSecond}`
+    );
   };
 
   return (
