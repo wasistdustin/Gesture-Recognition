@@ -1,17 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useReducer } from "react";
 import Webcam from "react-webcam";
-import { Hands, HAND_CONNECTIONS } from "@mediapipe/hands";
-import { Results } from "@mediapipe/hands";
-import { Camera } from "@mediapipe/camera_utils";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
-import Message from "./Message";
-import Canvas from "./Canvas";
+import {
+  GestureRecognizer,
+  FilesetResolver,
+  GestureRecognizerResult,
+} from "@mediapipe/tasks-vision";
 
-let gestureRecognizer: any;
-let enableWebcamButton;
-let webcamRunning = true;
-let canvasCtx: any;
+const demosSection = document.getElementById("demos");
+let gestureRecognizer: GestureRecognizer;
+let runningMode = "IMAGE";
+let enableWebcamButton: HTMLButtonElement;
+let webcamRunning: Boolean = false;
+const videoHeight = "360px";
+const videoWidth = "480px";
 
 interface Props {
   onGesture: (
@@ -25,103 +26,83 @@ interface Props {
 }
 
 const HandGesture = ({ onGesture }: Props) => {
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const [results, setResults] = useState<Results | null>(null);
-
-  const [gestureOutputText, setGestureOutputText] = useState("");
-  const [gestureScore, setGestureScore] = useState("");
-  const [gestureName, setGestureName] = useState("");
-  //init ML algo for seven gestures
-  const createGestureRecognizer = async () => {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
-    );
-    gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-      },
-      runningMode: "VIDEO",
-      numHands: 2,
-    });
-  };
-  createGestureRecognizer();
+  const [bool, setBool] = useState(false);
+  const [results, setResults] = useState<GestureRecognizerResult | null>(null);
+  const [gestureRecognizer, setGestureRecognizer] =
+    useState<GestureRecognizer | null>(null);
 
   useEffect(() => {
-    //init MP hand modell
-    const hands = new Hands({
-      locateFile: (file) => {
-        //console.log(`${file}`);
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-      },
-    });
-    hands.setOptions({
-      maxNumHands: 2,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.8,
-      minTrackingConfidence: 0.5,
-    });
-    hands.onResults(onResults);
-    //get frame for hand detection
-    if (
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video !== null
-    ) {
-      const camera = new Camera(webcamRef.current.video, {
-        onFrame: async () => {
-          const video = webcamRef.current?.video;
-          if (video) {
-            await hands.send({ image: video });
-          }
+    const createGestureRecognizer = async () => {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.1.0-alpha-13/wasm"
+      );
+      const recognizer = await GestureRecognizer.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
         },
-        width: 360,
-        height: 640,
+        runningMode: "VIDEO",
+        numHands: 2,
       });
-      camera.start();
-    }
+      setGestureRecognizer(recognizer);
+    };
+    createGestureRecognizer();
   }, []);
-  //draw landmarks + gesture detection
-  const onResults = (results: Results) => {
-    const video = webcamRef.current?.video;
-    //console.log(results);
+  console.log(`nach create`);
 
-    //draw landmarks
-    if (results.multiHandLandmarks) {
-      //console.log("Found Hand");
-      //console.log(results.multiHandLandmarks[0]);
-      //console.log(results);
+  let lastVideoTime = -1;
+  let resultsRec: GestureRecognizerResult;
 
-      setResults(results);
+  useEffect(() => {
+    if (webcamRef.current?.video && gestureRecognizer) {
+      predictWebcam();
+      console.log(`bin drin`);
     } else {
-      setResults(null);
+      console.log(`nicht geschafft`);
+      console.log(webcamRef);
+      console.log(gestureRecognizer);
     }
-    //Detect Gesture
-    let nowInMs = Date.now();
-    const resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
-    //console.log(resultsRec);
-    // if (results.multiHandLandmarks[1]) {
-    //   let nowInMs = Date.now();
-    //   const resultsRec1 = gestureRecognizer.recognizeForVideo(video, nowInMs);
-    //console.log(resultsRec);
+  }, [webcamRef.current, gestureRecognizer, bool]);
 
-    // }
-    //console.log("Prediction durhc");
-    //get one gestures out of seven
-    if (resultsRec.gestures.length > 0) {
+  async function predictWebcam() {
+    const video = webcamRef.current?.video;
+
+    let nowInMs = Date.now();
+    if (video && gestureRecognizer) {
+      if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+
+        const roiWidth = videoWidth;
+        const roiHeight = videoHeight;
+
+        if (roiWidth > 0 && roiHeight > 0) {
+          resultsRec = gestureRecognizer.recognizeForVideo(video, nowInMs);
+          setResults(resultsRec);
+          console.log(resultsRec);
+        } else {
+          // toggle + re-render as long as no image can be processed
+          console.log("Invalid ROI width or heights");
+          setBool(!bool);
+
+          return;
+        }
+      }
+    }
+
+    if (resultsRec && resultsRec.gestures.length > 0) {
       const categoryName = resultsRec.gestures[0][0].categoryName;
-      //console.log(`Predicition ${categoryName}`);
-      //console.log(`GestRec:`, resultsRec.handednesses[0][0].categoryName);
-      //const side = resultsRec.handednesses[0][0].categoryName;
+
       let side = "";
       if (resultsRec.handednesses[0][0].categoryName === "Left") {
         side = "Right";
       } else if (resultsRec.handednesses[0][0].categoryName === "Right") {
         side = "Left";
       }
-      //const handSide = resultsRec.handedne
       const categoryScore = resultsRec.gestures[0][0].score * 100;
       console.log(resultsRec);
 
@@ -140,28 +121,16 @@ const HandGesture = ({ onGesture }: Props) => {
       } else {
         onGesture(categoryName, categoryScore, side, "None", 0, "None");
       }
-
-      //setGestureScore(categoryScore);
-      setGestureOutputText(gestureOutput);
-      setGestureName(categoryName);
     } else {
-      setGestureOutputText("None");
-      setGestureScore("NoScore");
-      setGestureName("None");
       onGesture("None", 0, "None", "None", 0, "None");
     }
-  };
+    if (webcamRef && gestureRecognizer) {
+      window.requestAnimationFrame(predictWebcam);
+    }
+  }
 
   return (
     <>
-      <div>
-        {/* draw Result of gesture detection */}
-        {/* <Message
-          text={gestureOutputText}
-          score={gestureScore}
-          gesture={gestureName}
-        ></Message> */}
-      </div>
       <div>
         <Webcam
           audio={false}
@@ -180,13 +149,6 @@ const HandGesture = ({ onGesture }: Props) => {
             height: 640,
           }}
         ></Webcam>
-        {results && (
-          <Canvas
-            results={results}
-            webcamRef={webcamRef}
-            canvasRef={canvasRef}
-          />
-        )}
       </div>
     </>
   );
